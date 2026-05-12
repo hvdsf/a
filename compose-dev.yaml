@@ -26,6 +26,30 @@ services:
       retries: 3
       start_period: 10s
 
+
+  mssqlserver-migrations:
+      image: mcr.microsoft.com/dotnet/sdk:10.0
+      container_name: migrator
+      env_file:
+      - ./backend/.env.dev
+      working_dir: /app
+      entrypoint: 
+        - /bin/sh
+        - -c
+        - |
+          dotnet tool install --global dotnet-ef
+          dotnet restore
+          /root/.dotnet/tools/dotnet-ef database update
+      depends_on:
+        mssqlserver:
+          condition: service_healthy
+      networks:
+        - pm_network
+      volumes:
+        - ./backend:/app:z
+        - /app/obj
+        - /app/bin
+
   backend:
     build:
       context: ./backend
@@ -36,12 +60,12 @@ services:
     ports:
       - "8081:5122"
     depends_on:
-      mssqlserver:
-        condition: service_healthy
+      mssqlserver-migrations:
+        condition: service_completed_successfully
     networks:
       - pm_network
     volumes:
-      - ./backend:/app:Z
+      - ./backend:/app:z
       - /app/obj
       - /app/bin
     healthcheck:
