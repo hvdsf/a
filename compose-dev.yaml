@@ -1,0 +1,58 @@
+version: '3.8'
+
+name: pm
+
+services:
+  mssqlserver:
+    image: mcr.microsoft.com/mssql/server:2025-latest
+    container_name: mssqlserver
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=K6JqvDt.
+    ports:
+      - 8082:1433
+    volumes:
+      - mssqlserver_volume:/var/opt/mssql
+    networks:
+      - pm_network
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: containers/Containerfile.dev
+    container_name: backend
+    env_file:
+      - ./backend/.env.dev
+    ports:
+      - "8081:5122"
+    depends_on:
+      - mssqlserver
+    networks:
+      - pm_network
+    volumes:
+      - ./backend:/app:Z
+      - /app/obj
+      - /app/bin
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: containers/Containerfile.dev
+    container_name: frontend
+    ports:
+      - "8080:4200"
+    depends_on:
+      - backend
+    networks:
+      - pm_network
+    volumes:
+      - ./frontend:/app:Z
+
+networks:
+  pm_network:
+    driver: bridge
+    name: pm_network
+
+volumes:
+  mssqlserver_volume:
+    name: mssqlserver_volume
