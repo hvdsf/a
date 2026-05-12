@@ -39,7 +39,7 @@ builder.Services.AddAuthentication(options =>
 // Adicionando suporte a Controllers
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer(); // Necessário para descobrir as rotas
-builder.Services.AddSwaggerGen();           // Gera o documento OpenAPI
+builder.Services.AddSwaggerGen(c => c.EnableAnnotations());           // Gera o documento OpenAPI
 
 var app = builder.Build();
 

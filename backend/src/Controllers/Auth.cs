@@ -6,14 +6,23 @@ using Pm.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Swashbuckle.AspNetCore.Annotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace Pm.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[SwaggerTag("Operações de Autenticação e Gestão de Contas")]
 public class AuthController(AppDbContext context, IConfiguration configuration) : ControllerBase
 {
     [HttpPost("register")]
+    [SwaggerOperation(
+        Summary = "Registra um novo usuário.",
+        Description = "A senha será criptografada. O papel padrão é 'Basic'."
+    )]
+    [SwaggerResponse(StatusCodes.Status200OK, "Usuário registrado com sucesso!")]
+    [SwaggerResponse(StatusCodes.Status400BadRequest, "Se o e-mail já estiver em uso no banco de dados.", typeof(string))]
     public async Task<IActionResult> Register([FromBody] RegisterDto request)
     {
         if (await context.Users.AnyAsync(u => u.Email == request.Email))
@@ -35,6 +44,11 @@ public class AuthController(AppDbContext context, IConfiguration configuration) 
     }
 
     [HttpPost("login")]
+        [SwaggerOperation(
+        Summary = "Realiza login."
+    )]
+    [SwaggerResponse(StatusCodes.Status200OK, "{ token: \"token\" }")]
+    [SwaggerResponse(StatusCodes.Status400BadRequest, "Credenciais inválidas.", typeof(string))]
     public async Task<IActionResult> Login([FromBody] LoginDto request)
     {
         var user = await context.Users.FirstOrDefaultAsync(u => u.Email == request.Email);
@@ -75,6 +89,18 @@ public class AuthController(AppDbContext context, IConfiguration configuration) 
     }
 }
 
-// DTOs para receber os dados limpos
-public record RegisterDto(string Name, string Email, string Password);
+[SwaggerSchema("Dados necessários para o registro de um novo usuário.")]
+public record RegisterDto(
+    
+    [Required]
+    string Name,
+
+    [Required, EmailAddress]
+    string Email,
+
+    [Required, MinLength(6)]
+    string Password
+);
+
+[SwaggerSchema("Dados necessários para o realizar login.")]
 public record LoginDto(string Email, string Password);
