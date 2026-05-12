@@ -15,6 +15,16 @@ services:
       - mssqlserver_volume:/var/opt/mssql
     networks:
       - pm_network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P K6JqvDt. -Q 'SELECT 1' -C || exit 1"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   backend:
     build:
@@ -26,13 +36,24 @@ services:
     ports:
       - "8081:5122"
     depends_on:
-      - mssqlserver
+      mssqlserver:
+        condition: service_healthy
     networks:
       - pm_network
     volumes:
       - ./backend:/app:Z
       - /app/obj
       - /app/bin
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget http://localhost:5122/api/health -O /dev/null || exit 1"
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   frontend:
     build:
@@ -42,7 +63,8 @@ services:
     ports:
       - "8080:4200"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     networks:
       - pm_network
     volumes:
