@@ -1,7 +1,7 @@
-using backend.Models;
+using Pm.Models;
 using Microsoft.EntityFrameworkCore;
 
-namespace backend.Data;
+namespace Pm.Data;
 
 public class AppDbContext(DbContextOptions<AppDbContext> options) : DbContext(options)
 {

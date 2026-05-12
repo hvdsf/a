@@ -1,4 +1,4 @@
-namespace backend.Models;
+namespace Pm.Models;
 
 public enum Roles
 {
